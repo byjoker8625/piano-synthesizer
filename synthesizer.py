@@ -26,7 +26,6 @@ def mix_sound(frequency, duration=100, rate=44100):
 
     return sound
 
-
 octave = {
     "_C": 523.251,
     "H": 493.883,

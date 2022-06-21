@@ -1,11 +1,24 @@
 import numpy as numpy
 import pygame as pygame
 
-from synthesizer import mix_sound
-
 pygame.init()
 pygame.mixer.init()
 pygame.display.set_mode([600, 400])
+
+
+def mix_sound(frequency, duration=100, rate=44100):
+    frames = int(duration * rate)
+    synth = numpy.cos(2 * numpy.pi * frequency * numpy.linspace(0, duration, frames))
+    synth = numpy.clip(synth * 10, -1, 1)  # 2nd
+    # synth = numpy.cumsum(numpy.clip(arr*10, -1, 1)) # 3rd
+    # synth = synth+numpy.sin(2*numpy.pi*frequency*numpy.linspace(0,duration, frames)) # 3rd
+    synth = synth / max(numpy.abs(synth))  # 4
+    sound = numpy.asarray([32767 * synth, 32767 * synth]).T.astype(numpy.int16)
+    sound = pygame.sndarray.make_sound(sound.copy())
+    print(sound)
+
+    return sound
+
 
 octave = {
     "C5": 523.251,
@@ -18,7 +31,7 @@ octave = {
     "C4": 261.626
 }
 
-cached = {
+cache = {
     "c": mix_sound(octave["C5"]),
     "h": mix_sound(octave["H4"]),
     "a": mix_sound(octave["A4"]),
@@ -32,18 +45,17 @@ cached = {
 running = True
 playing = {}
 
+pygame.event.set_allowed([pygame.KEYDOWN, pygame.KEYUP])
+
 while running:
     for event in pygame.event.get():
-        if event.type == pygame.K_ESCAPE:
-            break
-
         if event.type == pygame.KEYDOWN:
             key = str(event.unicode)
 
-            if not octave.__contains__(key):
+            if not cache.__contains__(key):
                 continue
 
-            playing[key] = cached[key]
+            playing[key] = cache[key]
             playing[key].play()
         elif event.type == pygame.KEYUP:
             key = str(event.unicode)
